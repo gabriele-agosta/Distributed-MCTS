@@ -6,8 +6,9 @@ from player import *
 from go import *
 
 '''
-    - Nella simultazione probabilmente mi conviene arrivare fino alla fine del game, 
-    ed usare solo game vinto/perso
+    - Devo sistemare la simulazione
+    - Devo sistemare come vengono gestiti i casi in cui non ci sono freedom degree e lascio la cella su None
+    - Devo sistemare come viene calcolato il punteggio, assegnando le zone libere correttamente
 '''
 
 def check_move(board, node, color):
