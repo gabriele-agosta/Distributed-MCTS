@@ -3,6 +3,7 @@ import copy
 import random
 import numpy as np
 
+from typing import Union
 from node import *
 from go import *
 
@@ -12,27 +13,27 @@ class MonteCarloTreeSearch():
         self.root = Node(board)
 
     
-    def get_move(self, game, color):
-        for _ in range(100):
+    def get_move(self, game, color, prev_move):
+        for _ in range(150):
             leaf = self.selection(self.root)
             self.expansion(game, leaf, color)
-            reward = self.simulation(color, leaf.board)
+            reward = self.simulation(color, leaf.board, prev_move)
             self.backpropagation(leaf, reward)
         return self.best_child(self.root)
     
 
-    def best_child(self, node):
+    def best_child(self, node) -> Union[Node, None]:
         best_child = max(node.children, key=lambda child: child.n) if node.children else None
         return best_child
     
     
-    def selection(self, node):
+    def selection(self, node) -> Node:
         while not node.is_leaf():
             node = self.best_ucb(node)
         return node
 
 
-    def best_ucb(self, node):
+    def best_ucb(self, node) -> Node:
         choices_weights = [self.upper_confidence_bound(child, node) for child in node.children]
         max_value = max(choices_weights)
         max_indices = [i for i, weight in enumerate(choices_weights) if weight == max_value]
@@ -45,11 +46,11 @@ class MonteCarloTreeSearch():
         if child.n == 0:
             return float('inf')
         exploit_term = child.t / child.n
-        explore_term = C * math.sqrt(math.log(node.n) / child.n)
+        explore_term = C * math.sqrt(math.log(self.root.n) / child.n)
         return exploit_term + explore_term
             
 
-    def expansion(self, game, node, color):
+    def expansion(self, game, node, color) -> None:
         for row in range(len(game.board)):
             for col in range(len(game.board[row])):
                 if game.board[row][col] == [None]:
@@ -58,13 +59,13 @@ class MonteCarloTreeSearch():
                     node.children.append(Node(new_board, node, (row, col)))
 
 
-    def simulation(self, color, board) -> int:
+    def simulation(self, color, board, prev_move) -> int:
         current_color, captured_territory = color, None
         new_board = copy.deepcopy(board)
         passes = 0
 
         while passes < 2:
-            row, cell = self.get_random_move(new_board)
+            row, cell = self.get_random_move(new_board, color, prev_move)
             if row == -1 and cell == -1:
                 passes += 1 
                 continue
@@ -75,22 +76,21 @@ class MonteCarloTreeSearch():
         return Go.get_winner(new_board, color)
         
     
-    def backpropagation(self, node, reward):
+    def backpropagation(self, node, reward) -> None:
         while node is not None:
             node.n += 1
             node.t += reward
             node = node.parent
 
 
-    def get_random_move(self, board):
-        moves = Go.get_empty_cells(board)
-        freedom_degrees = 0
+    def get_random_move(self, board, color, prev_move) -> Tuple[int, int]:
+        moves = Go.get_legal_moves(board, color, prev_move)
+        
         row, col = -1, -1
-        while moves and freedom_degrees == 0:
+        while moves:
             index = random.randint(0, len(moves) - 1)
             row, col = moves.pop(index)
-            freedom_degrees =  Go.get_cell_freedom_degrees(board, row, col)
         return (row, col)
 
     
-# Parallelizzare la simulazione della singola mossa
+# Parallelizzare la simulazione 

@@ -1,13 +1,15 @@
-#import ray
+from typing import Union
+
 from mtcs import *
 
 class Player:
     def __init__(self, color) -> None:
         self.color = color
+        self.prev_move = ()
     
-    # Sistemare qui il valore che viene ritornato
-    def make_move(self, game) -> None:
+
+    def make_move(self, game) -> Union[None, Node]:
         if Go.get_empty_cells(game.board):
             mcts = MonteCarloTreeSearch(game.board)
-            return mcts.get_move(game, self.color)
+            return mcts.get_move(game, self.color, self.prev_move)
         return None
