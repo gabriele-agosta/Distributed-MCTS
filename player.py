@@ -1,4 +1,3 @@
-#import ray
 from mtcs import *
 
 class Player:

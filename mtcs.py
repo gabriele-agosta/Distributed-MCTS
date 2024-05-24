@@ -1,6 +1,7 @@
 import math
 import copy
 import random
+import ray
 
 from node import *
 from go import *
@@ -20,11 +21,16 @@ class MonteCarloTreeSearch():
     def get_move(self, game, player, opponent):
         # Probabilmente è qui dentro che devo effettuare le modifiche per 
         # simulare più child in una volta.
-        for _ in range(100):
+        for _ in range(10):
+            res = []
+
             leaf = self.selection(self.root)
             self.expansion(game, leaf, player.color)
-            reward = self.simulation(leaf.board, player, opponent)
-            self.backpropagation(leaf, reward)
+            
+            for child in leaf.children:
+                res.append(self.simulation.remote(self, child.board, player, opponent))
+            for reward in ray.get(res):
+                self.backpropagation(leaf, reward)
         return self.best_child(self.root)
     
 
@@ -57,14 +63,22 @@ class MonteCarloTreeSearch():
             
 
     def expansion(self, game, node, color):
+        moves = []
+
         for row in range(len(game.board)):
             for col in range(len(game.board[row])):
                 if game.board[row][col] == [None]:
-                    new_board = copy.deepcopy(game.board)
-                    new_board[row][col] = color
-                    node.children.append(Node(new_board, node, (row, col)))
+                    moves.append((row, col))
+
+        random.shuffle(moves)
+        for i in range(min(10, len(moves))):
+            row, col = moves[i]
+            new_board = copy.deepcopy(game.board)
+            new_board[row][col] = color
+            node.children.append(Node(new_board, node, (row, col)))
 
 
+    @ray.remote
     def simulation(self, board, player, opponent) -> int:
         current_color, captured_territory = player.color, None
         new_board = copy.deepcopy(board)
