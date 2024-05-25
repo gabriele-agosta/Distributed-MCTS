@@ -22,51 +22,49 @@ class Go():
 
 
     @staticmethod
-    def remove_captured_stones(board, color, opponent) -> None:
+    def check_region(board, color, opponent, move) -> None:
+        row, col = move
         visited = [[False for _ in range(len(board))] for _ in range(len(board))]
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-        for row in range(len(board)):
-            for col in range(len(board[row])):
-                if board[row][col] == color and not visited[row][col]:
-                    stack = [(row, col)]
-                    region = set()
-                    captured = True
+        stack = [(row, col)]
+        region = set()
+        captured = True
 
-                    while stack:
-                        r, c = stack.pop()
-                        if visited[r][c]:
-                            continue
-                        visited[r][c] = True
-                        region.add((r, c))
+        while stack:
+            r, c = stack.pop()
+            if visited[r][c]:
+                continue
+            visited[r][c] = True
+            region.add((r, c))
 
-                        for dr, dc in directions:
-                            nr, nc = r + dr, c + dc
-                            if 0 <= nr < len(board) and 0 <= nc < len(board[row]):
-                                if board[nr][nc] == [None]:
-                                    captured = False
-                                elif board[nr][nc] == color  and not visited[nr][nc]:
-                                    stack.append((nr, nc))
+            for dr, dc in directions:
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < len(board) and 0 <= nc < len(board[row]):
+                    if board[nr][nc] == [None]:
+                        captured = False
+                    elif board[nr][nc] == color and not visited[nr][nc]:
+                        stack.append((nr, nc))
 
-                    if captured:
-                        for r, c in region:
-                            board[r][c] = [None]
-                            opponent.captures += 1
-    
+        if captured:
+            for r, c in region:
+                board[r][c] = [None]
+                opponent.captures += 1
+
     
     @staticmethod
     def get_empty_cells(board, filling=False) -> List[Tuple[int, int]]:
         moves = []
         for row in range(len(board)):
             for col in range(len(board[row])):
-                condition = (board[row][col] == [None] and Go.get_cell_freedom_degrees(board, row, col)) if filling == False else board[row][col] == [None]
+                condition = (board[row][col] == [None] and Go.get_cell_liberties(board, row, col)) if filling == False else board[row][col] == [None]
                 if condition:
                     moves.append((row, col))
         return moves
     
 
     @staticmethod
-    def get_cell_freedom_degrees(board, row, col) -> int:
+    def get_cell_liberties(board, row, col) -> int:
         res = 0
 
         if ( 0 < row + 1 < len(board[row]) ) and (board[row + 1][col] == [None] ):
@@ -84,7 +82,7 @@ class Go():
     def get_opposite_color(color) -> str:
         return "white" if color == "black" else "black"
     
-    # La mia idea sarebbe farmi dare la zona libera e vedere da chi è circondata. Se ci sono più neri che bianchi -> neri, altrimenti l'opposto
+
     @staticmethod
     def get_winner(board, player, opponent) -> int:
         white_captured_territory = "\u2B1C"

@@ -6,8 +6,8 @@ class Player:
         self.captures = 0
     
     # Sistemare qui il valore che viene ritornato
-    def make_move(self, game, opponent) -> None:
+    def make_move(self, depth, game, opponent) -> None:
         if Go.get_empty_cells(game.board):
             mcts = MonteCarloTreeSearch(game.board)
-            return mcts.get_move(game, self, opponent)
+            return mcts.get_move(depth, game, self, opponent)
         return None

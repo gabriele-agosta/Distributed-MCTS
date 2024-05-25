@@ -12,17 +12,17 @@ def check_move(board, node, color, opponent):
     else:
         row, col = node.move
         board[row][col] = color
-        Go.remove_captured_stones(board, color, opponent)
+        Go.check_region(board, color, opponent, (row, col))
         return False
 
 
 def start_game(game, white, black):
     skip_turn = [False, False]
     while not all(skip_turn):
-        move = black.make_move(game, white)
+        move = black.make_move(15, game, white)
         skip_turn[1] = check_move(game.board, move, black.color, white)
         game.print_board()
-        node = white.make_move(game, black)
+        node = white.make_move(20, game, black)
         skip_turn[0] = check_move(game.board, node, white.color, black)
         game.print_board()
     return game.get_winner(game.board, white, black)

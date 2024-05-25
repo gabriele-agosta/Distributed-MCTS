@@ -6,20 +6,14 @@ import ray
 from node import *
 from go import *
 
-'''
-    Parallelizzazione: 
-        - Invece di estendere di un solo child, si estende di n chidren con ray
-        - Ogni child lo simulo più volte per ottenere risultati migliori
-'''
-
 
 class MonteCarloTreeSearch():
     def __init__(self, board) -> None:
         self.root = Node(board)
 
     
-    def get_move(self, game, player, opponent):
-        for _ in range(10):
+    def get_move(self, depth, game, player, opponent):
+        for _ in range(depth):
             res = []
 
             leaf = self.selection(self.root)
@@ -83,12 +77,12 @@ class MonteCarloTreeSearch():
         passes = 0
 
         while passes < 2:
-            row, cell = self.get_random_move(new_board)
+            row, cell = self.get_random_move(new_board, current_color, opponent)
             if row == -1 and cell == -1:
                 passes += 1 
                 continue
             new_board[row][cell] = current_color
-            Go.remove_captured_stones(new_board, player.color, opponent)
+            Go.check_region(new_board, player.color, opponent, (row, cell))
             current_color = Go.get_opposite_color(current_color)
         return Go.get_winner(new_board, player, opponent)
         
@@ -100,12 +94,17 @@ class MonteCarloTreeSearch():
             node = node.parent
 
 
-    def get_random_move(self, board):
+    def get_random_move(self, board, color, opponent):
         moves = Go.get_empty_cells(board)
-        freedom_degrees = 0
+        random.shuffle(moves)
+        liberties, made_captures = 0, True
         row, col = -1, -1
-        while moves and freedom_degrees == 0:
-            index = random.randint(0, len(moves) - 1)
-            row, col = moves.pop(index)
-            freedom_degrees =  Go.get_cell_freedom_degrees(board, row, col)
+        is_legit = (liberties != 0 or made_captures)
+
+        while moves and not liberties:
+            new_board = copy.deepcopy(board)
+            row, col = moves.pop(0)
+            new_board[row][col] = color
+            liberties =  Go.get_cell_liberties(new_board, row, col)#, Go.check_suicide(new_board, (row, col), opponent)
+            
         return (row, col)
