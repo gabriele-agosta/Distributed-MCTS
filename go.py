@@ -2,9 +2,6 @@ from typing import List, Tuple
 
 
 class Go():
-    white_captured_territory = "\u2B1C"
-    black_captured_territory = "\u2B1B"
-
     def __init__(self, n) -> None:
         self.board = [[ [None] for _ in range(n) ] for _ in range(n)]
     
@@ -25,13 +22,13 @@ class Go():
 
 
     @staticmethod
-    def remove_captured_stones(board, color, color_captured, opponent) -> None:
+    def remove_captured_stones(board, color, opponent) -> None:
         visited = [[False for _ in range(len(board))] for _ in range(len(board))]
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
         for row in range(len(board)):
             for col in range(len(board[row])):
-                if board[row][col] == color or board[row][col] == color_captured  and not visited[row][col]:
+                if board[row][col] == color and not visited[row][col]:
                     stack = [(row, col)]
                     region = set()
                     captured = True
@@ -48,22 +45,22 @@ class Go():
                             if 0 <= nr < len(board) and 0 <= nc < len(board[row]):
                                 if board[nr][nc] == [None]:
                                     captured = False
-                                elif (board[nr][nc] == color or board[nr][nc] == color_captured)  and not visited[nr][nc]:
+                                elif board[nr][nc] == color  and not visited[nr][nc]:
                                     stack.append((nr, nc))
 
                     if captured:
                         for r, c in region:
-                            # board[r][c] = Go.white_captured_territory if color == "black" else Go.black_captured_territory
                             board[r][c] = [None]
                             opponent.captures += 1
     
     
     @staticmethod
-    def get_empty_cells(board) -> List[Tuple[int, int]]:
+    def get_empty_cells(board, filling=False) -> List[Tuple[int, int]]:
         moves = []
         for row in range(len(board)):
             for col in range(len(board[row])):
-                if board[row][col] == [None] and Go.get_cell_freedom_degrees(board, row, col):
+                condition = (board[row][col] == [None] and Go.get_cell_freedom_degrees(board, row, col)) if filling == False else board[row][col] == [None]
+                if condition:
                     moves.append((row, col))
         return moves
     
@@ -87,21 +84,45 @@ class Go():
     def get_opposite_color(color) -> str:
         return "white" if color == "black" else "black"
     
-
+    # La mia idea sarebbe farmi dare la zona libera e vedere da chi è circondata. Se ci sono più neri che bianchi -> neri, altrimenti l'opposto
     @staticmethod
-    def get_winner(board, white, black) -> str:
-        white_captures = white.captures + 6.5
-        black_captures = black.captures
+    def get_winner(board, player, opponent) -> int:
+        white_captured_territory = "\u2B1C"
+        black_captured_territory = "\u2B1B"
+
+        if player.color == "white":
+            white_captures = player.captures + 6.5
+            black_captures = opponent.captures
+        else:
+            white_captures = opponent.captures + 6.5
+            black_captures = player.captures
+        
+        free_cells = Go.get_empty_cells(board, True)
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        for cell in free_cells:
+            row, col = cell
+            surroundings = {"white":0, "black":0}
+
+            for dr, dc in directions:
+                nr, nc = row + dr, col + dc
+                if 0 <= nr < len(board) and 0 <= nc < len(board[row]):
+                    if board[nr][nc] == "white":
+                        surroundings["white"] += 1
+                    elif board[nr][nc] == "black":
+                        surroundings["black"] += 1
+            if surroundings["white"] > surroundings["black"]:
+                board[row][col] = white_captured_territory    
+            elif surroundings["white"] < surroundings["black"]:
+                board[row][col] = black_captured_territory
 
         for row in board:
             for cell in row:
-                if cell == "white" or cell == Go.white_captured_territory:
+                if cell == "white":
                     white_captures += 1
                 else:
                     black_captures += 1
-        
-        
-        if (white_captures > black_captures):
-            return 1
+            
+        if player.color == "white":
+            return 1 if (white_captures > black_captures) else 0
         else:
-            return 0
+            return 1 if (white_captures < black_captures) else 0

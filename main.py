@@ -3,8 +3,7 @@ from go import *
 
 '''
     - ( ) Devo sistemare come viene selezionata una move. Attualmente mi sembra che sto creando un albero, ma espando solamente un nodo tra i figli di ognuno
-    - (X) Devo sistemare come vengono gestiti i casi in cui non ci sono freedom degree e lascio la cella su None
-    - (X) Devo sistemare come viene calcolato il punteggio, assegnando le zone libere correttamente
+    - ( ) Devo sistemare come viene selezionata una move. Devo consentire di posizionare dove non ci sono gradi di libertà se però si riesce a fare una cattura
 '''
 
 def check_move(board, node, color, opponent):
@@ -13,8 +12,7 @@ def check_move(board, node, color, opponent):
     else:
         row, col = node.move
         board[row][col] = color
-        captured = Go.white_captured_territory if color == "white" else Go.black_captured_territory
-        Go.remove_captured_stones(board, color, captured, opponent)
+        Go.remove_captured_stones(board, color, opponent)
         return False
 
 
@@ -37,7 +35,8 @@ def main():
 
     winner = start_game(game, white, black)
     res = "White" if winner == 1 else "Black"
-    print(f"Result: { res } won!\n") 
+    game.print_board()
+    print(f"\n\nResult: { res } won!\n") 
 
 
 if __name__ == "__main__":

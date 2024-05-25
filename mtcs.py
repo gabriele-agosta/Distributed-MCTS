@@ -19,8 +19,6 @@ class MonteCarloTreeSearch():
 
     
     def get_move(self, game, player, opponent):
-        # Probabilmente è qui dentro che devo effettuare le modifiche per 
-        # simulare più child in una volta.
         for _ in range(10):
             res = []
 
@@ -80,7 +78,7 @@ class MonteCarloTreeSearch():
 
     @ray.remote
     def simulation(self, board, player, opponent) -> int:
-        current_color, captured_territory = player.color, None
+        current_color = player.color
         new_board = copy.deepcopy(board)
         passes = 0
 
@@ -90,8 +88,7 @@ class MonteCarloTreeSearch():
                 passes += 1 
                 continue
             new_board[row][cell] = current_color
-            captured_territory = Go.white_captured_territory if player.color == "white" else Go.black_captured_territory
-            Go.remove_captured_stones(new_board, player.color, captured_territory, opponent)
+            Go.remove_captured_stones(new_board, player.color, opponent)
             current_color = Go.get_opposite_color(current_color)
         return Go.get_winner(new_board, player, opponent)
         
