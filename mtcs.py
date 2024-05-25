@@ -82,7 +82,7 @@ class MonteCarloTreeSearch():
                 passes += 1 
                 continue
             new_board[row][cell] = current_color
-            Go.check_region(new_board, player.color, opponent, (row, cell))
+            Go.check_region(new_board, player.color, opponent)
             current_color = Go.get_opposite_color(current_color)
         return Go.get_winner(new_board, player, opponent)
         
