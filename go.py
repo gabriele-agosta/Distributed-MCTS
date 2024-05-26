@@ -36,44 +36,6 @@ class Go():
 
 
     @staticmethod
-    def check_region(board, color, opponent) -> None:
-        visited = [[False for _ in range(len(board))] for _ in range(len(board))]
-        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        territory_color = Go.white_captured_territory if color == "white" else Go.black_captured_territory
-        opponent_territory_color = Go.white_captured_territory if color == "black" else Go.black_captured_territory
-
-        for row in range(len(board)):
-            for col in range(len(board[row])):
-                if board[row][col] == color and not visited[row][col]:
-                    stack = [(row, col)]
-                    region = set()
-                    captured = True
-
-                    while stack:
-                        r, c = stack.pop()
-                        if visited[r][c]:
-                            continue
-                        visited[r][c] = True
-                        region.add((r, c))
-
-                        for dr, dc in directions:
-                            nr, nc = r + dr, c + dc
-                            if 0 <= nr < len(board) and 0 <= nc < len(board[row]):
-                                if board[nr][nc] == [None]:
-                                    captured = False
-                                elif (board[nr][nc] == color or board[nr][nc] == territory_color) and not visited[nr][nc]:
-                                    stack.append((nr, nc))
-
-                    if captured:
-                        if len(Go.get_empty_cells(board, color)) != 1:
-                            for r, c in region:
-                                board[r][c] = [None]
-                                opponent.captures += 1
-                        else:
-                            board[r][c] = color
-
-
-    @staticmethod
     def map_regions(board, player, opponent):
         visited = [[False for _ in range(len(board))] for _ in range(len(board))]
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
