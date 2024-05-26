@@ -7,22 +7,30 @@ from node import *
 from go import *
 
 
+'''
+    Controllare l'alternanza dei player per quanto riguarda simulation
+
+'''
+
 class MonteCarloTreeSearch():
     def __init__(self, board) -> None:
         self.root = Node(board)
 
     
-    def get_move(self, depth, game, player, opponent):
-        for _ in range(depth):
+    def get_move(self, iterations, game, player, opponent):
+        p1, p2 = player, opponent
+
+        for _ in range(iterations):
             res = []
 
             leaf = self.selection(self.root)
-            self.expansion(game, leaf, player.color)
+            self.expansion(game, leaf, p1.color)
             
             for child in leaf.children:
-                res.append(self.simulation.remote(self, child.board, player, opponent))
+                res.append(self.simulation.remote(self, child.board, p1, p2))
             for reward in ray.get(res):
                 self.backpropagation(leaf, reward)
+            p1, p2 = p2, p1
         return self.best_child(self.root)
     
 
@@ -77,12 +85,12 @@ class MonteCarloTreeSearch():
         passes = 0
 
         while passes < 2:
-            row, cell = self.get_random_move(new_board, current_color, opponent)
+            row, cell = self.get_random_move(new_board, player.color)
             if row == -1 and cell == -1:
                 passes += 1 
                 continue
             new_board[row][cell] = current_color
-            Go.check_region(new_board, player.color, opponent)
+            Go.manage_regions(new_board, player, opponent)
             current_color = Go.get_opposite_color(current_color)
         return Go.get_winner(new_board, player, opponent)
         
@@ -94,17 +102,9 @@ class MonteCarloTreeSearch():
             node = node.parent
 
 
-    def get_random_move(self, board, color, opponent):
-        moves = Go.get_empty_cells(board)
+    def get_random_move(self, board, color):
+        moves = Go.get_empty_cells(board, color)
         random.shuffle(moves)
-        liberties, made_captures = 0, True
-        row, col = -1, -1
-        is_legit = (liberties != 0 or made_captures)
-
-        while moves and not liberties:
-            new_board = copy.deepcopy(board)
-            row, col = moves.pop(0)
-            new_board[row][col] = color
-            liberties =  Go.get_cell_liberties(new_board, row, col)#, Go.check_suicide(new_board, (row, col), opponent)
+        row, col = moves.pop(0) if moves else (-1, -1)
             
         return (row, col)

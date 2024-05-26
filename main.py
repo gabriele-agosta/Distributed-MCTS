@@ -1,29 +1,27 @@
 from player import *
 from go import *
 
-'''
-    - ( ) Devo sistemare come viene selezionata una move. Attualmente mi sembra che sto creando un albero, ma espando solamente un nodo tra i figli di ognuno
-    - ( ) Devo sistemare come viene selezionata una move. Devo consentire di posizionare dove non ci sono gradi di libertà se però si riesce a fare una cattura
-'''
 
-def check_move(board, node, color, opponent):
+def check_move(board, node, player, opponent):
     if node == None:
         return True
     else:
         row, col = node.move
-        board[row][col] = color
-        Go.check_region(board, color, opponent)
+        board[row][col] = player.color
+        Go.manage_regions(board, player, opponent)
         return False
 
 
 def start_game(game, white, black):
     skip_turn = [False, False]
+    white_iterations, black_iterations = 10, 10
+
     while not all(skip_turn):
-        move = black.make_move(10, game, white)
-        skip_turn[1] = check_move(game.board, move, black.color, white)
+        move = black.make_move(black_iterations, game, white)
+        skip_turn[1] = check_move(game.board, move, black, white)
         game.print_board()
-        node = white.make_move(10, game, black)
-        skip_turn[0] = check_move(game.board, node, white.color, black)
+        node = white.make_move(white_iterations, game, black)
+        skip_turn[0] = check_move(game.board, node, white, black)
         game.print_board()
     return game.get_winner(game.board, white, black)
 
