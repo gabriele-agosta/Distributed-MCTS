@@ -19,12 +19,11 @@ class MonteCarloTreeSearch():
     
     def get_move(self, iterations, game, player, opponent):
         p1, p2 = player, opponent
-
         for _ in range(iterations):
             res = []
 
             leaf = self.selection(self.root)
-            self.expansion(game, leaf, p1.color)
+            self.expansion(game, leaf, 10, p1.color)
             
             for child in leaf.children:
                 res.append(self.simulation.remote(self, child.board, p1, p2))
@@ -41,11 +40,11 @@ class MonteCarloTreeSearch():
     
     def selection(self, node):
         while not node.is_leaf():
-            node = self.best_ucb(node)
+            node = self.uct(node)
         return node
 
 
-    def best_ucb(self, node):
+    def uct(self, node):
         choices_weights = [self.upper_confidence_bound(child, node) for child in node.children]
         max_value = max(choices_weights)
         max_indices = [i for i, weight in enumerate(choices_weights) if weight == max_value]
@@ -62,16 +61,11 @@ class MonteCarloTreeSearch():
         return exploit_term + explore_term
             
 
-    def expansion(self, game, node, color):
-        moves = []
-
-        for row in range(len(game.board)):
-            for col in range(len(game.board[row])):
-                if game.board[row][col] == [None]:
-                    moves.append((row, col))
+    def expansion(self, game, node, n_children, color):
+        moves = Go.get_empty_cells(game.board, color)
 
         random.shuffle(moves)
-        for i in range(min(10, len(moves))):
+        for i in range(min(n_children, len(moves))):
             row, col = moves[i]
             new_board = copy.deepcopy(game.board)
             new_board[row][col] = color

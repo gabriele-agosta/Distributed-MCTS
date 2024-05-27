@@ -2,6 +2,9 @@ from typing import List, Tuple
 
 
 class Go():
+    white_captured_territory = "\u2B1C"
+    black_captured_territory = "\u2B1B"
+
     def __init__(self, n) -> None:
         self.board = [[ [None] for _ in range(n) ] for _ in range(n)]
 
@@ -31,6 +34,7 @@ class Go():
             for col in range(len(board[row])):
                 if board[row][col] in [player.color, opponent.color] and not visited[row][col]:
                     curr_color = player.color if board[row][col] == player.color else opponent.color
+                    curr_territory = Go.white_captured_territory if curr_color == "White" else Go.black_captured_territory
                     stack = [(row, col)]
                     region = set()
 
@@ -44,7 +48,7 @@ class Go():
                         for dr, dc in directions:
                             nr, nc = r + dr, c + dc
                             if 0 <= nr < len(board) and 0 <= nc < len(board[row]):
-                                if (board[nr][nc] == curr_color) and not visited[nr][nc]:
+                                if board[nr][nc] == curr_color or board[nr][nc] == curr_territory and not visited[nr][nc]:
                                     stack.append((nr, nc))
                     regions.append(region)
         return regions
@@ -56,10 +60,16 @@ class Go():
         liberties = 0
 
         for r, c in region:
+            territory = [None]
+            if board[r][c] == "black":
+                territory = Go.black_captured_territory 
+            elif board[r][c] == "white":
+                territory = Go.white_captured_territory 
+
             for dr, dc in directions:
                 nr, nc = r + dr, c + dc
                 if 0 <= nr < len(board) and 0 <= nc < len(board[nr]):
-                    if board[nr][nc] == [None]:
+                    if board[nr][nc] == [None] or board[nr][nc] == territory:
                         liberties += 1
         return liberties
 
@@ -68,20 +78,28 @@ class Go():
     def delete_region(board, region, player, opponent) -> None:
         for cell in region:
             row, col = cell
-            if board[row][col] == player.color:
+            if board[row][col] == opponent.color:
                 player.captures += 1
             else:
                 opponent.captures += 1
-            board[row][col] = [None]
+            if board[row][col] == "white" or board[row][col] == Go.white_captured_territory: 
+                board[row][col] = Go.black_captured_territory 
+            elif board[row][col] == "black" or board[row][col] == Go.black_captured_territory: 
+                board[row][col] = Go.white_captured_territory 
 
 
     @staticmethod
     def manage_regions(board, player, opponent) -> None:
         regions = Go.map_regions(board, player, opponent)
 
-        for region in regions:
-            if Go.get_region_liberties(board, region) == 0 and len(regions) > 1:
-                Go.delete_region(board, region, player, opponent)
+        if len(regions) > 2:
+            for region in regions:
+                if Go.get_region_liberties(board, region) == 0:
+                    Go.delete_region(board, region, player, opponent)
+
+        elif len(regions) == 2 and not Go.get_empty_cells(board, player.color) and not Go.get_empty_cells(board, opponent.color):
+            captured_region = regions[0] if len(regions[0]) < len(regions[1]) else regions[1]
+            Go.delete_region(board, captured_region, player, opponent)
 
     
     @staticmethod
@@ -101,10 +119,11 @@ class Go():
         res, same_adj, opposite_adj, sides = 0, 0, 0, 0
         rows, cols = len(board), len(board[0])
         opposite_color = Go.get_opposite_color(color)
+        acceptable = [[None]]
 
         if row + 1 < rows:
             sides += 1
-            if board[row + 1][col] == [None]:
+            if board[row + 1][col] in acceptable:
                 res += 1
             if board[row + 1][col] == color:
                 same_adj += 1
@@ -113,7 +132,7 @@ class Go():
 
         if row - 1 >= 0:
             sides += 1
-            if board[row - 1][col] == [None]:
+            if board[row - 1][col] in acceptable:
                 res += 1
             if board[row - 1][col] == color:
                 same_adj += 1
@@ -122,7 +141,7 @@ class Go():
 
         if col + 1 < cols:
             sides += 1
-            if board[row][col + 1] == [None]:
+            if board[row][col + 1] in acceptable:
                 res += 1
             if board[row][col + 1] == color:
                 same_adj += 1
@@ -131,7 +150,7 @@ class Go():
 
         if col - 1 >= 0:
             sides += 1
-            if board[row][col - 1] == [None]:
+            if board[row][col - 1] in acceptable:
                 res += 1
             if board[row][col - 1] == color:
                 same_adj += 1
@@ -159,13 +178,13 @@ class Go():
         
         for row in board:
             for cell in row:
-                if cell == "white":
+                if cell == Go.white_captured_territory:
                     white_captures += 1
-                elif cell == "black":
+                elif cell == Go.black_captured_territory:
                     black_captures += 1
         
             
         if player.color == "white":
             return 1 if (white_captures > black_captures) else 0
         else:
-            return 1 if (white_captures < black_captures) else 0
+            return 0 if (white_captures < black_captures) else 1
