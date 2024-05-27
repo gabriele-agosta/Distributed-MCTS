@@ -2,7 +2,7 @@ from player import *
 from go import *
 
 
-def check_move(board, node, player, opponent):
+def check_move(board, node, player, opponent) -> bool:
     if node == None:
         return True
     else:
@@ -12,7 +12,7 @@ def check_move(board, node, player, opponent):
         return False
 
 
-def start_game(game, white, black):
+def start_game(game, white, black) -> int:
     skip_turn = [False, False]
     white_iterations, black_iterations = 10, 10
 
@@ -26,7 +26,7 @@ def start_game(game, white, black):
     return game.get_winner(game.board, white, black)
 
 
-def main():
+def main() -> None:
     n = int(input("Choose the dimension of the board (n x n): "))
     game = Go(n)
     white, black = Player("white"), Player("black")

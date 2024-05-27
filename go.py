@@ -1,24 +1,10 @@
 from typing import List, Tuple
-import random
 
 
 class Go():
-    white_captured_territory = "\u2B1C"
-    black_captured_territory = "\u2B1B"
-
     def __init__(self, n) -> None:
         self.board = [[ [None] for _ in range(n) ] for _ in range(n)]
-        self.previous_board = None
-    
 
-    @staticmethod
-    def __eq__(current_board, previous_board) -> bool:
-        for row in range(len(current_board)):
-            for col in range(len(current_board[row])):
-                if current_board[row][col] != previous_board[row][col]:
-                    return False
-        return True
-    
 
     def print_board(self) -> None:
         print("\n\n")
@@ -36,7 +22,7 @@ class Go():
 
 
     @staticmethod
-    def map_regions(board, player, opponent):
+    def map_regions(board, player, opponent) -> List[Tuple[int, int]]:
         visited = [[False for _ in range(len(board))] for _ in range(len(board))]
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         regions = []
@@ -65,7 +51,7 @@ class Go():
     
 
     @staticmethod
-    def get_region_liberties(board, region):
+    def get_region_liberties(board, region) -> int:
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         liberties = 0
 
@@ -79,19 +65,23 @@ class Go():
 
 
     @staticmethod
-    def delete_region(board, region):
+    def delete_region(board, region, player, opponent) -> None:
         for cell in region:
             row, col = cell
+            if board[row][col] == player.color:
+                player.captures += 1
+            else:
+                opponent.captures += 1
             board[row][col] = [None]
 
 
     @staticmethod
-    def manage_regions(board, player, opponent):
+    def manage_regions(board, player, opponent) -> None:
         regions = Go.map_regions(board, player, opponent)
 
         for region in regions:
             if Go.get_region_liberties(board, region) == 0 and len(regions) > 1:
-                Go.delete_region(board, region)
+                Go.delete_region(board, region, player, opponent)
 
     
     @staticmethod
@@ -149,7 +139,6 @@ class Go():
                 opposite_adj += 1
 
         return res, same_adj, opposite_adj, sides
-
 
     
     @staticmethod
