@@ -1,4 +1,4 @@
-from mtcs import *
+from mcts import *
 from node import *
 from typing import Optional
 

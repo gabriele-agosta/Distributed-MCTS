@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 
 class Go():
@@ -25,7 +25,7 @@ class Go():
 
 
     @staticmethod
-    def map_regions(board, player, opponent) -> List[Tuple[int, int]]:
+    def map_regions(board, player, opponent) -> List[Set[Tuple[int, int]]]:
         visited = [[False for _ in range(len(board))] for _ in range(len(board))]
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         regions = []
