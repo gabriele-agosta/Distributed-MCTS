@@ -109,7 +109,7 @@ class Go():
         for row in range(len(board)):
             for col in range(len(board[row])):
                 liberties, same_adj, opposite_adj, sides = Go.get_cell_liberties(board, row, col, color)
-                if (board[row][col] == [None] and opposite_adj < sides and (liberties or (same_adj != sides or same_adj >= 2))):
+                if (board[row][col] == [None] and opposite_adj < sides and (liberties or (same_adj != sides))):
                     moves.append((row, col))
         return moves
     
@@ -167,6 +167,8 @@ class Go():
 
     @staticmethod
     def get_winner(board, player, opponent) -> int:
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+
         if player.color == "white":
             white_captures = player.captures + 6.5
             black_captures = opponent.captures
@@ -174,7 +176,23 @@ class Go():
             white_captures = opponent.captures + 6.5
             black_captures = player.captures
         
-        
+        for row in range(len(board)):
+            for col in range(len(board[row])):
+                if board[row][col] == [None]:
+                    white_neighbors, black_neighbors = 0, 0
+
+                    for dr, dc in directions:
+                        nr, nc = row + dr, col + dc
+                        if 0 <= nr < len(board) and 0 <= nc < len(board[nr]):
+                            if board[nr][nc] == "white" or board[nr][nc] == Go.white_captured_territory:
+                                white_neighbors += 1
+                            elif board[nr][nc] == "black" or board[nr][nc] == Go.black_captured_territory:
+                                black_neighbors += 1
+                    if white_neighbors > black_neighbors:
+                        board[row][col] = Go.white_captured_territory
+                    elif black_neighbors > white_neighbors:
+                        board[row][col] = Go.black_captured_territory
+
         
         for row in board:
             for cell in row:
