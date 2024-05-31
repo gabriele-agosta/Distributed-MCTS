@@ -12,7 +12,7 @@ class MonteCarloTreeSearch():
         self.root = Node(board)
 
     
-    def get_move(self, iterations, game, player, opponent):
+    def get_move(self, iterations, game, player, opponent) -> Node:
         p1, p2 = player, opponent
         for _ in range(iterations):
             res = []
@@ -28,7 +28,7 @@ class MonteCarloTreeSearch():
         return self.best_child(self.root)
     
 
-    def best_child(self, node):
+    def best_child(self, node) -> Node:
         best_child = max(node.children, key=lambda child: child.n) if node.children else None
         return best_child
     
@@ -39,7 +39,7 @@ class MonteCarloTreeSearch():
         return node
 
 
-    def uct(self, node):
+    def uct(self, node) -> Node:
         choices_weights = [self.upper_confidence_bound(child, node) for child in node.children]
         max_value = max(choices_weights)
         max_indices = [i for i, weight in enumerate(choices_weights) if weight == max_value]
@@ -56,7 +56,7 @@ class MonteCarloTreeSearch():
         return exploit_term + explore_term
             
 
-    def expansion(self, game, node, n_children, color):
+    def expansion(self, game, node, n_children, color) -> None:
         moves = Go.get_empty_cells(game.board, color)
 
         random.shuffle(moves)
@@ -84,14 +84,14 @@ class MonteCarloTreeSearch():
         return Go.get_winner(new_board, player, opponent)
         
     
-    def backpropagation(self, node, reward):
+    def backpropagation(self, node, reward) -> None:
         while node is not None:
             node.n += 1
             node.t += reward
             node = node.parent
 
 
-    def get_random_move(self, board, color):
+    def get_random_move(self, board, color) -> Tuple[int, int]:
         moves = Go.get_empty_cells(board, color)
         random.shuffle(moves)
         row, col = moves.pop(0) if moves else (-1, -1)

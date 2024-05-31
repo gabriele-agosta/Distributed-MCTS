@@ -9,9 +9,9 @@ class Node:
         self.color = color
 
 
-    def add_child(self, child):
+    def add_child(self, child) -> None:
         self.children.append(child)
 
     
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         return len(self.children) == 0

@@ -14,7 +14,7 @@ def check_move(board, node, player, opponent) -> bool:
 
 def start_game(game, white, black) -> int:
     skip_turn = [False, False]
-    white_iterations, black_iterations = 10, 10
+    white_iterations, black_iterations = 5, 20
 
     while not all(skip_turn):
         move = black.make_move(black_iterations, game, white)
